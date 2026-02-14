@@ -72,9 +72,11 @@ jobs:
               --name flask-app \
               -p 5000:5000 \
               -e FLASK_ENV=production \
-              -e DATABASE_URL=${DATABASE_URL} \
-              -e SECRET_KEY=${SECRET_KEY} \
-              -e REDIS_HOST=${REDIS_HOST} \
+              -e GEMINI_API_KEY='${{ secrets.GEMINI_API_KEY }}' \
+              -e STORE_CONFIG_FILE='store_config.json' \
+              -e FLASK_DEBUG='true' \
+              -e FLASK_HOST='0.0.0.0' \
+              -e FLASK_PORT='5000' \
               $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO:$IMAGE_TAG
 
             #Cleanup images older than 2 days
