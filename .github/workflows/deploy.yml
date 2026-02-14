@@ -28,20 +28,20 @@ jobs:
         run: |
           aws ecr get-login-password --region $AWS_REGION \
           | docker login --username AWS \
-          --password-stdin ${{ secrets.AWS_ACCESS_KEY_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
+          --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
 
       - name: Build Docker Image
         run: |
           IMAGE_TAG=${{ github.sha }}
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
           docker tag $ECR_REPOSITORY:$IMAGE_TAG \
-            ${{ secrets.AWS_ACCESS_KEY_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Push Docker Image to ECR
         run: |
           IMAGE_TAG=${{ github.sha }}
           docker push \
-          ${{ secrets.AWS_ACCESS_KEY_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -51,7 +51,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             AWS_REGION=${{ secrets.AWS_REGION }}
-            ACCOUNT_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
             IMAGE_TAG=${{ github.sha }}
             REPO=${{ secrets.ECR_REPOSITORY }}
 
