@@ -3,7 +3,7 @@ name: Deploy Flask App to EC2 via ECR
 on:
   push:
     branches:
-      - deploy-branch
+      - main
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
