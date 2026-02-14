@@ -1,0 +1,24 @@
+# Don't copy env files (use -e or --env-file at runtime)
+.env
+.env.*
+!.env.example
+
+# Git and IDE
+.git
+.gitignore
+.cursor
+.vscode
+*.md
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.venv
+venv
+env
+
+# Docker
+Dockerfile
+.dockerignore

@@ -1,0 +1,81 @@
+name: Deploy Flask App to EC2 via ECR
+
+on:
+  push:
+    branches:
+      - deploy-branch
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION \
+          | docker login --username AWS \
+          --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      - name: Build Docker Image
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Push Docker Image to ECR
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          docker push \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            AWS_REGION=${{ secrets.AWS_REGION }}
+            ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+            IMAGE_TAG=${{ github.sha }}
+            REPO=${{ secrets.ECR_REPOSITORY }}
+
+            # Login to ECR
+            aws ecr get-login-password --region $AWS_REGION \
+            | docker login --username AWS \
+            --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+            # Stop old container if exists
+            docker stop flask-app || true
+            docker rm flask-app || true
+
+            # Pull new image
+            docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO:$IMAGE_TAG
+
+            # Run new container
+            docker run -d \
+              --name flask-app \
+              -p 5000:5000 \
+              -e FLASK_ENV=production \
+              -e DATABASE_URL=${DATABASE_URL} \
+              -e SECRET_KEY=${SECRET_KEY} \
+              -e REDIS_HOST=${REDIS_HOST} \
+              $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO:$IMAGE_TAG
+
+            #Cleanup images older than 2 days
+            docker image prune -af --filter "until=48h"

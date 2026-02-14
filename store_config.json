@@ -1,0 +1,37 @@
+{
+  "store_id": "fileSearchStores/filevault20260208032201-2u0rjmk58xf4",
+  "store_display_name": "FileVault_20260208_032201",
+  "created_at": "2026-02-08T03:44:22.661803",
+  "root_folder": "/Users/riddhi/Documents/Developer/freelancing/Rag_base_functionality/datset",
+  "stats": {
+    "uploaded": 99,
+    "skipped": 30,
+    "failed": 80,
+    "system_files": 0,
+    "clients": [
+      "client_a",
+      "client_b"
+    ],
+    "years": [
+      "2023-24",
+      "2024-25",
+      "2025-26"
+    ],
+    "months": [
+      "april",
+      "august",
+      "december",
+      "february",
+      "january",
+      "july",
+      "june",
+      "march",
+      "may",
+      "november",
+      "october",
+      "others",
+      "root_level",
+      "september"
+    ]
+  }
+}
